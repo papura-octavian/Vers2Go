@@ -13,3 +13,7 @@ build/
 *.spec
 dist/*
 !dist/Vers2Go.exe
+
+# Installerele compilate local cu Inno Setup (cele oficiale se publică
+# automat la GitHub Releases prin .github/workflows/release.yml)
+installer_output/

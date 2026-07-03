@@ -1,0 +1,57 @@
+# Release automat: la fiecare tag de forma v1.2.3, construiește pe serverele
+# GitHub exe-ul (PyInstaller) și installerul (Inno Setup) și le publică la
+# https://github.com/SkipIt-Labs/Vers2Go/releases
+#
+# Cum publici o versiune nouă:
+#   git tag v1.0.0
+#   git push origin v1.0.0
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write  # necesar pentru crearea Release-ului
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build exe (PyInstaller)
+        run: |
+          python -m pip install pyinstaller
+          python -m PyInstaller --onefile --windowed --name Vers2Go --icon icon.ico --add-data "icon.ico;." vers2go.py
+
+      - name: Ensure Inno Setup
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup -y --no-progress
+          }
+
+      - name: Build installer (Inno Setup)
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart("v")
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion=$version installer.iss
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Vers2Go ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            dist/Vers2Go.exe
+            installer_output/*.exe

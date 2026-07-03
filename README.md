@@ -90,10 +90,36 @@ aibă Python sau vreo bibliotecă instalată.
 > rulează aplicația direct cu `python vers2go.py`; executabilul e util
 > pentru PC-urile fără restricții (de ex. laptopul de proiecție).
 
+## Release-uri automate (installer profesional)
+
+Repo-ul are un workflow GitHub Actions care, la fiecare tag de versiune,
+construiește automat pe serverele GitHub atât executabilul cât și un
+**installer Windows** (Inno Setup: wizard de instalare, scurtătură în
+Start Menu / Desktop, uninstaller) și le publică la
+[Releases](https://github.com/SkipIt-Labs/Vers2Go/releases).
+
+Publicarea unei versiuni noi:
+
+```bash
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+După ~3-4 minute, versiunea apare la Releases cu două fișiere:
+
+- `Vers2Go-Setup-1.0.1.exe` — installerul (recomandat pentru utilizatori);
+- `Vers2Go.exe` — executabilul portabil, fără instalare.
+
+> Fișierele nu sunt semnate digital (certificatele de code-signing costă),
+> deci la prima rulare Windows SmartScreen poate afișa avertismentul
+> „Windows protected your PC" — se trece cu *More info → Run anyway*.
+
 ## Structura proiectului
 
 | Fișier | Rol |
 |---|---|
 | `vers2go.py` | Aplicația completă (GUI + generarea prezentării) |
 | `icon.ico` | Iconița aplicației (fereastră + executabil) |
+| `installer.iss` | Scriptul Inno Setup pentru installerul Windows |
+| `.github/workflows/release.yml` | Build + release automat la fiecare tag `v*` |
 | `requirements.txt` | Gol — nu există dependențe de runtime |
