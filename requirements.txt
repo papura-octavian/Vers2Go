@@ -1,0 +1,3 @@
+# Aplicația folosește DOAR biblioteca standard Python (tkinter, zipfile).
+# Nu există dependențe de runtime de instalat — acest fișier e păstrat
+# doar pentru claritate. Pentru build-ul executabilului vezi README.md.

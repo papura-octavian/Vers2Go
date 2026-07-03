@@ -1,0 +1,15 @@
+# Prezentările generate cu aplicația (se pot regenera oricând)
+*.pptx
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# PyInstaller — păstrăm DOAR executabilul final din dist/,
+# ca să poată fi descărcat direct de pe GitHub fără build
+build/
+*.spec
+dist/*
+!dist/Vers2Go.exe
