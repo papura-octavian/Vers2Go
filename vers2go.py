@@ -743,26 +743,30 @@ def generate_presentation(lyrics: str, title: str, output_path: str,
 # Interfața grafică (tkinter)
 # ---------------------------------------------------------------------------
 
-# Paleta interfeței (deschisă, sobră, cu un singur accent)
-UI_BG = "#F3F4F6"
-UI_CARD = "#FFFFFF"
-UI_BORDER = "#E2E4E9"
-UI_TEXT = "#1F2328"
-UI_MUTED = "#6B7280"
-UI_ACCENT = "#4F46E5"
-UI_ACCENT_HOVER = "#4338CA"
-UI_ERROR = "#B42318"
-UI_WARN = "#A15C07"
+# Paleta interfeței (întunecată, sobră, cu un singur accent)
+UI_BG = "#0F1115"
+UI_CARD = "#181B22"
+UI_FIELD = "#12141A"        # fundalul casetelor de text
+UI_BORDER = "#2A2F3A"
+UI_BUTTON = "#232733"
+UI_BUTTON_HOVER = "#2E3342"
+UI_TEXT = "#E6E8EE"
+UI_MUTED = "#9097A6"
+UI_ACCENT = "#6366F1"
+UI_ACCENT_HOVER = "#4F46E5"
+UI_SELECTION = "#3B3F6B"
+UI_ERROR = "#F87171"
+UI_WARN = "#FBBF24"
 UI_FONT = "Segoe UI"
 
 # Culorile fiecărui tip de secțiune: (text, fundal) — în editor și în
 # previzualizare, ca strofele, refrenul și puntea să se distingă dintr-o privire
 KIND_COLORS = {
-    "S": ("#1D4ED8", "#E0E7FF"),
-    "R": ("#047857", "#D1FAE5"),
-    "P": ("#0E7490", "#CFFAFE"),
-    "B": ("#B45309", "#FEF3C7"),
-    "C": ("#7E22CE", "#F3E8FF"),
+    "S": ("#A5B4FC", "#252A4A"),
+    "R": ("#6EE7B7", "#173A2F"),
+    "P": ("#67E8F9", "#123A42"),
+    "B": ("#FCD34D", "#3D3115"),
+    "C": ("#D8B4FE", "#34234A"),
 }
 
 HELP_TEXT = """\
@@ -825,8 +829,25 @@ def _enable_dpi_awareness():
         pass
 
 
+def _dark_title_bar(window: tk.Misc):
+    """Bara de titlu a ferestrei devine întunecată, ca restul interfeței
+    (Windows 10 20H1+ / Windows 11; pe alte sisteme nu face nimic)."""
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+        window.update_idletasks()
+        hwnd = ctypes.windll.user32.GetParent(window.winfo_id())
+        value = ctypes.c_int(1)
+        # DWMWA_USE_IMMERSIVE_DARK_MODE = 20
+        ctypes.windll.dwmapi.DwmSetWindowAttribute(
+            hwnd, 20, ctypes.byref(value), ctypes.sizeof(value))
+    except (AttributeError, OSError):
+        pass
+
+
 class Card(tk.Frame):
-    """Un panou alb cu margine subțire, în care stau grupurile de controale."""
+    """Un panou cu margine subțire, în care stau grupurile de controale."""
 
     def __init__(self, parent, **kwargs):
         super().__init__(parent, bg=UI_CARD, highlightthickness=1,
@@ -854,6 +875,7 @@ class Vers2GoApp:
         self.root = root
         root.title("Vers2Go — Versuri în prezentare")
         root.configure(bg=UI_BG)
+        _dark_title_bar(root)
 
         # La DPI mare, distanțele în pixeli trebuie mărite proporțional
         self.scale = max(1.0, root.winfo_fpixels("1i") / 96)
@@ -897,8 +919,11 @@ class Vers2GoApp:
         style.theme_use("clam")
         base = (UI_FONT, 10)
         style.configure(".", background=UI_CARD, foreground=UI_TEXT, font=base)
-        style.configure("TEntry", fieldbackground=UI_CARD, bordercolor=UI_BORDER,
-                        lightcolor=UI_BORDER, darkcolor=UI_BORDER, padding=self.px(7))
+        style.configure("TEntry", fieldbackground=UI_FIELD, foreground=UI_TEXT,
+                        insertcolor=UI_TEXT, bordercolor=UI_BORDER,
+                        lightcolor=UI_BORDER, darkcolor=UI_BORDER,
+                        selectbackground=UI_SELECTION, selectforeground=UI_TEXT,
+                        padding=self.px(7))
         style.map("TEntry", bordercolor=[("focus", UI_ACCENT)],
                   lightcolor=[("focus", UI_ACCENT)])
 
@@ -910,23 +935,25 @@ class Vers2GoApp:
                   background=[("pressed", UI_ACCENT_HOVER), ("active", UI_ACCENT_HOVER)],
                   bordercolor=[("active", UI_ACCENT_HOVER)])
 
-        style.configure("TButton", background=UI_CARD, bordercolor=UI_BORDER,
-                        lightcolor=UI_CARD, darkcolor=UI_CARD, focuscolor=UI_CARD,
-                        padding=(self.px(12), self.px(6)))
-        style.map("TButton", background=[("pressed", UI_BG), ("active", UI_BG)])
+        style.configure("TButton", background=UI_BUTTON, foreground=UI_TEXT,
+                        bordercolor=UI_BORDER, lightcolor=UI_BUTTON, darkcolor=UI_BUTTON,
+                        focuscolor=UI_BUTTON, padding=(self.px(12), self.px(6)))
+        style.map("TButton", background=[("pressed", UI_BUTTON_HOVER),
+                                         ("active", UI_BUTTON_HOVER)],
+                  lightcolor=[("active", UI_BUTTON_HOVER)],
+                  darkcolor=[("active", UI_BUTTON_HOVER)])
 
-        style.configure("Header.TButton", background=UI_BG, bordercolor=UI_BORDER,
-                        lightcolor=UI_BG, darkcolor=UI_BG, focuscolor=UI_BG)
-        style.map("Header.TButton", background=[("active", UI_CARD)])
-
-        style.configure("TCheckbutton", background=UI_CARD, focuscolor=UI_CARD,
-                        indicatorbackground=UI_CARD, indicatorforeground=UI_ACCENT)
+        style.configure("TCheckbutton", background=UI_CARD, foreground=UI_TEXT,
+                        focuscolor=UI_CARD, indicatorbackground=UI_FIELD,
+                        indicatorforeground=UI_TEXT, bordercolor=UI_BORDER,
+                        lightcolor=UI_FIELD, darkcolor=UI_FIELD)
         style.map("TCheckbutton", background=[("active", UI_CARD)],
-                  indicatorbackground=[("selected", UI_CARD)])
+                  indicatorbackground=[("selected", UI_ACCENT), ("active", UI_BUTTON)])
 
-        style.configure("Vertical.TScrollbar", background=UI_BG, troughcolor=UI_CARD,
-                        bordercolor=UI_CARD, lightcolor=UI_BG, darkcolor=UI_BG,
-                        arrowsize=self.px(12))
+        style.configure("Vertical.TScrollbar", background=UI_BUTTON, troughcolor=UI_FIELD,
+                        bordercolor=UI_FIELD, lightcolor=UI_BUTTON, darkcolor=UI_BUTTON,
+                        arrowcolor=UI_MUTED, arrowsize=self.px(12))
+        style.map("Vertical.TScrollbar", background=[("active", UI_BUTTON_HOVER)])
 
     def _label(self, parent, text, size=10, bold=False, color=UI_TEXT, bg=UI_CARD, **kw):
         font = (UI_FONT, size, "bold") if bold else (UI_FONT, size)
@@ -943,7 +970,7 @@ class Vers2GoApp:
         self._label(titles, "Versurile cântării, gata de proiectat — câte o secțiune pe slide",
                     10, color=UI_MUTED, bg=UI_BG).pack(anchor="w")
 
-        ttk.Button(header, text="Cum marchez secțiunile?", style="Header.TButton",
+        ttk.Button(header, text="Cum marchez secțiunile?",
                    command=self.show_help).pack(side="right")
 
     def _build_editor(self, parent) -> tk.Frame:
@@ -974,13 +1001,13 @@ class Vers2GoApp:
         ):
             Chip(chips, text, kind, command).pack(side="left", padx=(self.px(4), 0))
 
-        text_frame = tk.Frame(inner, bg=UI_CARD, highlightthickness=1,
+        text_frame = tk.Frame(inner, bg=UI_FIELD, highlightthickness=1,
                               highlightbackground=UI_BORDER, highlightcolor=UI_ACCENT)
         text_frame.pack(fill="both", expand=True)
         self.lyrics_text = tk.Text(
             text_frame, font=(UI_FONT, 11), wrap="word", undo=True, relief="flat", bd=0,
-            padx=self.px(14), pady=self.px(12), fg=UI_TEXT, bg=UI_CARD,
-            insertbackground=UI_TEXT, selectbackground="#C7D2FE",
+            padx=self.px(14), pady=self.px(12), fg=UI_TEXT, bg=UI_FIELD,
+            insertbackground=UI_TEXT, selectbackground=UI_SELECTION,
             selectforeground=UI_TEXT, spacing1=self.px(1), spacing3=self.px(1),
             highlightthickness=0,
         )
@@ -1033,9 +1060,9 @@ class Vers2GoApp:
         self.count_label = self._label(head, "", 9, color=UI_MUTED)
         self.count_label.pack(side="right")
 
-        preview = tk.Frame(inner, bg=UI_BG, highlightthickness=1, highlightbackground=UI_BORDER)
+        preview = tk.Frame(inner, bg=UI_FIELD, highlightthickness=1, highlightbackground=UI_BORDER)
         preview.pack(fill="both", expand=True)
-        self.canvas = tk.Canvas(preview, bg=UI_BG, highlightthickness=0, bd=0)
+        self.canvas = tk.Canvas(preview, bg=UI_FIELD, highlightthickness=0, bd=0)
         pscroll = ttk.Scrollbar(preview, orient="vertical", command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=pscroll.set)
         pscroll.pack(side="right", fill="y")
@@ -1107,6 +1134,7 @@ class Vers2GoApp:
         win = tk.Toplevel(self.root, bg=UI_CARD)
         win.title("Cum marchez secțiunile")
         win.transient(self.root)
+        _dark_title_bar(win)
         text = tk.Text(win, font=(UI_FONT, 10), wrap="word", relief="flat", bd=0,
                        padx=self.px(22), pady=self.px(18), bg=UI_CARD, fg=UI_TEXT,
                        width=72, height=34, highlightthickness=0)
@@ -1218,7 +1246,8 @@ class Vers2GoApp:
                           text=slide.label or "Titlu", fill=fg, font=(UI_FONT, 9, "bold"))
 
             top = y + caption_h
-            c.create_rectangle(x, top, x + tw, top + th, fill="#000000", outline="")
+            # conturul subțire desparte slide-ul negru de fundalul întunecat
+            c.create_rectangle(x, top, x + tw, top + th, fill="#000000", outline=UI_BORDER)
 
             label = slide.label if show_labels else ""
             font_pt = compute_font_size(slide.text, 2 * LABEL_SPACE_IN if label else 0)
