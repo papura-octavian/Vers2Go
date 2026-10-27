@@ -1,6 +1,6 @@
 # Release automat: la fiecare tag de forma v1.2.3, construiește pe serverele
 # GitHub exe-ul (PyInstaller) și installerul (Inno Setup) și le publică la
-# https://github.com/SkipIt-Labs/Vers2Go/releases
+# https://github.com/papura-octavian/Vers2Go/releases
 #
 # Cum publici o versiune nouă:
 #   git tag v1.0.0

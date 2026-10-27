@@ -1,9 +1,9 @@
 # Vers2Go — Versuri în prezentare PowerPoint
 
-Aplicație desktop (Python + tkinter) care transformă versurile unei melodii
-într-o prezentare PowerPoint (`.pptx`): fiecare strofă devine un slide cu
-fundal negru și text alb, bold, centrat, cu mărimea fontului calculată
-automat astfel încât textul să încapă pe slide.
+Aplicație desktop (Python + tkinter) care transformă versurile unei cântări
+într-o prezentare PowerPoint (`.pptx`): fiecare secțiune (strofă, refren,
+punte, final) devine un slide cu fundal negru și text alb, bold, centrat,
+cu mărimea fontului calculată automat astfel încât textul să încapă pe slide.
 
 **Zero dependențe externe:** fișierul `.pptx` (o arhivă ZIP cu XML în format
 Office Open XML) este generat direct cu biblioteca standard Python. Aplicația
@@ -12,31 +12,67 @@ Control / WDAC) blochează DLL-urile native din pachetele pip.
 
 ## Cum funcționează
 
-1. Lipești versurile în caseta de text (strofele se separă prin **linii goale**).
-2. Opțional, completezi titlul melodiei — acesta devine primul slide.
-3. Apeși **„Generează PowerPoint"** și alegi unde se salvează fișierul `.pptx`.
+1. Lipești versurile în caseta din stânga (secțiunile se separă prin
+   **rânduri goale**) și, opțional, marchezi secțiunile (vezi mai jos).
+2. Opțional, completezi titlul cântării — acesta devine primul slide.
+3. În dreapta vezi în timp real slide-urile, în ordinea în care vor ieși.
+4. Apeși **„Generează PowerPoint"** și alegi unde se salvează fișierul `.pptx`.
 
 Mărimea fontului este calculată explicit în cod (pe baza numărului de linii
-și a celei mai lungi linii din strofă), nu prin auto-fit-ul din PowerPoint,
-deci prezentarea arată corect și în LibreOffice Impress sau Google Slides.
+și a lățimii literelor din cel mai lung rând), nu prin auto-fit-ul din
+PowerPoint, deci prezentarea arată corect și în LibreOffice Impress sau
+Google Slides.
 
-### Refrenul (marcajul `R:`)
+### Secțiunile cântării
 
-O strofă care începe cu `R:` este recunoscută ca **refren**: marcajul este
-eliminat de pe slide, iar refrenul este inserat automat **după fiecare
-strofă** a melodiei. Exemplu:
+Eticheta se scrie pe un rând separat, deasupra versurilor (butoanele
+„+ Strofă", „+ Refren" etc. din aplicație o inserează la cursor):
+
+| Etichetă | Secțiune | Ce înseamnă |
+|---|---|---|
+| `S1`, `S2`… | Strofa | versurile care se schimbă de la o repetare la alta |
+| `R` | Refrenul | partea care se repetă identic |
+| `R2`, `R3`… | Alt refren | când cântarea are mai multe refrene diferite |
+| `P` | Pre-refren | 1-2 rânduri care duc spre refren (rar) |
+| `B` | Puntea (bridge) | o parte diferită, de obicei o dată, spre final |
+| `C` | Finalul (coda) | rândurile de încheiere |
+
+Sunt acceptate și cuvinte întregi (`Strofa 2`, `Refren`, `Punte`, `Final`,
+`Bridge`, `Chorus`), între paranteze (`[Refren]`) sau cu două puncte și
+primul vers pe același rând (`R: Primul vers`, ca în versiunile vechi).
+Blocurile fără etichetă devin strofe numerotate automat, iar un bloc
+identic cu unul de dinainte e o repetare a lui. O etichetă fără versuri
+sub ea (de ex. doar `R`) înseamnă „aici se repetă secțiunea".
+
+Exemplu:
 
 ```
-Strofa întâi...
+S1
+Prima strofă...
 
-R: Refrenul melodiei...
+R
+Refrenul...
 
-Strofa a doua...
+S2
+A doua strofă...
+
+B
+Puntea...
 ```
 
-produce slide-urile: *strofa 1 → refren → strofa 2 → refren*. Marcajul e
-acceptat și cu literă mică (`r:`), iar dacă melodia are mai multe refrene
-marcate, fiecare strofă primește refrenul cel mai recent definit înaintea ei.
+### Ordinea de cântare
+
+- **Automată** (câmpul gol): secțiunile se cântă în ordinea scrisă, iar
+  dacă refrenul e scris o singură dată, el se repetă după fiecare strofă și
+  după punte. Exemplul de mai sus devine *S1 R S2 R B R*. Cu mai multe
+  refrene, fiecare strofă primește refrenul cel mai recent dinaintea ei.
+- **Scrisă de tine**: de exemplu `S1 R S2 R B R R` sau `S1 R S2 Rx2 C`
+  (`Rx2` = refrenul de două ori). Butonul „Completează automat" scrie
+  ordinea automată în câmp, ca s-o poți modifica.
+
+Bifa **„Arată numele secțiunii pe slide"** (oprită implicit) scrie mic și
+gri, în colțul fiecărui slide, „Strofa 1", „Refren" etc. — util echipei de
+proiecție.
 
 ## Rulare în development
 
@@ -46,6 +82,12 @@ Nu este nevoie de `pip install` — nu există dependențe:
 
 ```bash
 python vers2go.py
+```
+
+Testele (citirea secțiunilor, ordinea de cântare, validitatea fișierului):
+
+```bash
+python -m unittest test_vers2go
 ```
 
 ## Generarea executabilului (PyInstaller)
@@ -96,7 +138,7 @@ Repo-ul are un workflow GitHub Actions care, la fiecare tag de versiune,
 construiește automat pe serverele GitHub atât executabilul cât și un
 **installer Windows** (Inno Setup: wizard de instalare, scurtătură în
 Start Menu / Desktop, uninstaller) și le publică la
-[Releases](https://github.com/SkipIt-Labs/Vers2Go/releases).
+[Releases](https://github.com/papura-octavian/Vers2Go/releases).
 
 Publicarea unei versiuni noi:
 
@@ -119,6 +161,7 @@ După ~3-4 minute, versiunea apare la Releases cu două fișiere:
 | Fișier | Rol |
 |---|---|
 | `vers2go.py` | Aplicația completă (GUI + generarea prezentării) |
+| `test_vers2go.py` | Testele (`python -m unittest test_vers2go`) |
 | `icon.ico` | Iconița aplicației (fereastră + executabil) |
 | `installer.iss` | Scriptul Inno Setup pentru installerul Windows |
 | `.github/workflows/release.yml` | Build + release automat la fiecare tag `v*` |
